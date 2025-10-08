@@ -31,12 +31,6 @@ GIT_TERMINAL_PROMPT=0
 DISPLAY=:1
 export GIT_SSH_COMMAND GIT_TERMINAL_PROMPT DISPLAY
 
-# Regex
-_re_url='([\w.@\:/~\-]+)(\.git)(\/)?'
-_re_proto_http='(http(s)?(:(\/){0,3}))?'
-_re_proto_ssh='((((git|user)@[\w.-]+)|(git|ssh))(:(\/){0,3}))'
-
-
 # Functions
 # ---------
 
@@ -163,6 +157,8 @@ smsg() {
 # Fail message to stder and exit 1
 fail() { printf >&2 '%s\n' "$*"; exit 1; }
 
+is_ssh_repo() { [[ "$1" =~ ^[a-zA-Z0-9._-]+@[^:]+:.+\.git$ ]]; }
+is_http_repo() { [[ "$1" =~ ^https?://.+\.git$ ]]; }
 
 # Main
 # ----
@@ -284,12 +280,12 @@ if [ -f "$ARCHI_PROJECT_PATH/model/folder.xml" ]; then
 elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
   # Check URL is SSH and clone
-  if re_match "${GIT_REPOSITORY:-}" "^$_re_proto_ssh$_re_url$"; then
+  if is_ssh_repo "${GIT_REPOSITORY:-}"; then
     smsg "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir with ssh"
     git_clone "$GIT_REPOSITORY"
 
   # Check URL is HTTP
-  elif re_match "${GIT_REPOSITORY:-}" "^$_re_proto_http$_re_url$"; then
+  elif is_http_repo "${GIT_REPOSITORY:-}"; then
     _proto="${GIT_REPOSITORY%%://*}"
 
     # Use token if set
