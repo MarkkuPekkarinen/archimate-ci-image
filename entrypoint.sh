@@ -264,7 +264,7 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
   # Check URL is HTTP
   elif re_match "${GIT_REPOSITORY:-}" "^$_re_proto_http$_re_url$"; then
-    _proto="${GIT_REPOSITORY%://*}"
+    _proto="${GIT_REPOSITORY%%://*}"
 
     # Use token if set
     if [ -n "${GIT_TOKEN:-}" ]; then
