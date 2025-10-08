@@ -28,8 +28,7 @@ declare -a _ssh_args=(
 )
 GIT_SSH_COMMAND="ssh ${_ssh_args[*]}"
 GIT_TERMINAL_PROMPT=0
-DISPLAY=:1
-export GIT_SSH_COMMAND GIT_TERMINAL_PROMPT DISPLAY
+export GIT_SSH_COMMAND GIT_TERMINAL_PROMPT
 
 # Functions
 # ---------
@@ -73,7 +72,7 @@ archi_run() {
     )
 
   # Run Archi
-  xvfb-run \
+  xvfb-run -a \
     /opt/Archi/Archi -application "$ARCHI_APP" -consoleLog -nosplash \
       --modelrepository.loadModel "$ARCHI_PROJECT_PATH" "${_args[@]}" &&
   printf '\n%s\n\n' "Done. Reports saved to $ARCHI_REPORT_PATH"
@@ -121,7 +120,7 @@ update_html() {
 
   if [ "${ARCHI_EXPORT_MODEL_ENABLED,,}" == true ]; then
     _li="<li><a href=\"$_project.archimate\" class=\"go\">Model</a></li>"
-    sed "/modal.*i18n-about/i $_li" -i "$html"
+    grep -q '>Model<' "$html" || sed "/modal.*i18n-about/i $_li" -i "$html"
   fi
 }
 
@@ -200,9 +199,9 @@ if [ "${GITHUB_ACTIONS:-}" == true ]; then
   [ "${DEBUG:-false}" != true ] && set -x
 
   # Create repository url with token
-  _gh_repo="${GITHUB_SERVER_URL//:\/\/*}://"                       # Protocol
-  _gh_repo+="x-access-token:$GITHUB_TOKEN@"                        # Auth
-  _gh_repo+="${GITHUB_SERVER_URL//*\/\/}/$GITHUB_REPOSITORY.git"   # URL
+  # _gh_repo="${GITHUB_SERVER_URL//:\/\/*}://"                       # Protocol
+  # _gh_repo+="x-access-token:$GITHUB_TOKEN@"                        # Auth
+  # _gh_repo+="${GITHUB_SERVER_URL//*\/\/}/$GITHUB_REPOSITORY.git"   # URL
 
   # Set actions specified paths
   ARCHI_REPORT_PATH="$ARCHI_PROJECT_PATH/$GIT_SUBTREE_PREFIX"
@@ -212,7 +211,7 @@ if [ "${GITHUB_ACTIONS:-}" == true ]; then
   ARCHI_EXPORT_MODEL_PATH="$ARCHI_REPORT_PATH"
   cd "$ARCHI_PROJECT_PATH" && mkdir -p "$ARCHI_REPORT_PATH"
 
-  # Create CNAME for custon domain
+  # Create CNAME for custom domain
   [ -n "${GITHUB_PAGES_DOMAIN:-}" ] &&
     echo "$GITHUB_PAGES_DOMAIN" > "$ARCHI_REPORT_PATH/CNAME"
 
@@ -236,10 +235,13 @@ if [ "${GITHUB_ACTIONS:-}" == true ]; then
 
   # Commit and push subtree
   git add --force "$GIT_SUBTREE_PREFIX"
-  git commit --message "Archimate report ${GITHUB_ACTION:-0}:${GITHUB_JOB:-0}"
+  git commit --message \
+    "Archimate report ${GITHUB_ACTION:-0}:${GITHUB_JOB:-0}" || \
+    echo "Nothing to commit"
 
   _subtree="$(
-    git subtree split --prefix "$GIT_SUBTREE_PREFIX" "$GITHUB_REF_NAME" || :
+    git subtree split --prefix \
+      "$GIT_SUBTREE_PREFIX" "${GITHUB_REF_NAME:-HEAD}" || :
   )"
   [ -n "$_subtree" ] || fail "git subtree split returned empty sha"
 
@@ -326,13 +328,13 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
   # Git URL not valid
   else
-    fail 'Git repository URL not valid. Plese use http or ssh url'
+    fail 'Git repository URL not valid. Please use http or ssh url'
   fi
 
 # Exit. Model not exist
 else
   smsg \
-    "Plese set http or ssh url to git repositorty in \$GIT_REPOSITORY" \
+    "Please set http or ssh url to git repository in \$GIT_REPOSITORY" \
     "variable or mount model to \$ARCHI_PROJECT_PATH ($ARCHI_PROJECT_PATH)" \
     'directory.'
 fi
