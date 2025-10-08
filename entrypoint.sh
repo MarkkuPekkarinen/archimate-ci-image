@@ -105,23 +105,27 @@ urlencode() {
 }
 
 update_html() {
+  local html="$ARCHI_REPORT_PATH/index.html"
+
+  [ ! -f "$html" ] && return
+
   if [ "${ARCHI_CSV_REPORT_ENABLED,,}" == true ]; then
     for item in {elements,properties,relations}; do
       _li="<li><a href=\"${item}.csv\" class=\"go\">${item^}</a></li>"
-      sed "/modal.*i18n-about/i $_li" -i "$ARCHI_REPORT_PATH/index.html"
+      sed "/modal.*i18n-about/i $_li" -i "$html"
     done
   fi
 
   if [ "${ARCHI_JASPER_REPORT_ENABLED,,}" == true ]; then
     for item in ${ARCHI_JASPER_REPORT_FORMATS//,/ }; do
       _li="<li><a href=\"$_project.${item,,}\" class=\"go\">${item^^}</a></li>"
-      sed "/modal.*i18n-about/i $_li" -i "$ARCHI_REPORT_PATH/index.html"
+      sed "/modal.*i18n-about/i $_li" -i "$html"
     done
   fi
 
   if [ "${ARCHI_EXPORT_MODEL_ENABLED,,}" == true ]; then
     _li="<li><a href=\"$_project.archimate\" class=\"go\">Model</a></li>"
-    sed "/modal.*i18n-about/i $_li" -i "$ARCHI_REPORT_PATH/index.html"
+    sed "/modal.*i18n-about/i $_li" -i "$html"
   fi
 }
 
