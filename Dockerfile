@@ -44,7 +44,7 @@ ARG COARCHI_VERSION=0.9.4
 
 # Download & extract Archimate coArchi plugin
 RUN set -eux; \
-    curl -#Lo coarchi.zip --request POST \
+    curl -#Lo coarchi.zip \
       "https://www.archimatetool.com/downloads/coarchi/coArchi_$COARCHI_VERSION.archiplugin"; \
     unzip coarchi.zip -d /root/.archi/dropins/ && \
     rm coarchi.zip
