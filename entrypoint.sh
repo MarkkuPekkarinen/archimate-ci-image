@@ -97,6 +97,18 @@ urlencode() {
   done
 }
 
+insert_nav_right() {
+  local file="$1" line="$2"
+  awk -v ins="$line" '
+    BEGIN { done=0 }
+    # match UL where class attribute contains word navbar-right (class order agnostic)
+    /<ul[^>]*class="[^"]*\bnavbar-right\b[^"]*"/ && done==0 {
+      print; print ins; done=1; next
+    }
+    { print }
+  ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
 update_html() {
   local html="$ARCHI_REPORT_PATH/index.html"
 
@@ -106,7 +118,7 @@ update_html() {
     for item in {elements,properties,relations}; do
       _li="<li><a href=\"${item}.csv\" class=\"go\">${item^}</a></li>"
       grep -q ">${item^}<" "$html" || \
-        sed "/modal.*i18n-about/i $_li" -i "$html"
+        insert_nav_right "$html" "$_li"
     done
   fi
 
@@ -114,13 +126,14 @@ update_html() {
     for item in ${ARCHI_JASPER_REPORT_FORMATS//,/ }; do
       _li="<li><a href=\"$_project.${item,,}\" class=\"go\">${item^^}</a></li>"
       grep -q ">${item^^}<" "$html" || \
-        sed "/modal.*i18n-about/i $_li" -i "$html"
+        insert_nav_right "$html" "$_li"
     done
   fi
 
   if [ "${ARCHI_EXPORT_MODEL_ENABLED,,}" == true ]; then
     _li="<li><a href=\"$_project.archimate\" class=\"go\">Model</a></li>"
-    grep -q '>Model<' "$html" || sed "/modal.*i18n-about/i $_li" -i "$html"
+    grep -q '>Model<' "$html" || \
+      insert_nav_right "$html" "$_li"
   fi
 }
 
