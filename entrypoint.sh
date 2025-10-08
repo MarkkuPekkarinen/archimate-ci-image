@@ -106,14 +106,16 @@ update_html() {
   if [ "${ARCHI_CSV_REPORT_ENABLED,,}" == true ]; then
     for item in {elements,properties,relations}; do
       _li="<li><a href=\"${item}.csv\" class=\"go\">${item^}</a></li>"
-      sed "/modal.*i18n-about/i $_li" -i "$html"
+      grep -q ">${item^}<" "$html" || \
+        sed "/modal.*i18n-about/i $_li" -i "$html"
     done
   fi
 
   if [ "${ARCHI_JASPER_REPORT_ENABLED,,}" == true ]; then
     for item in ${ARCHI_JASPER_REPORT_FORMATS//,/ }; do
       _li="<li><a href=\"$_project.${item,,}\" class=\"go\">${item^^}</a></li>"
-      sed "/modal.*i18n-about/i $_li" -i "$html"
+      grep -q ">${item^^}<" "$html" || \
+        sed "/modal.*i18n-about/i $_li" -i "$html"
     done
   fi
 
