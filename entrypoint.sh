@@ -239,8 +239,10 @@ if [ "${GITHUB_ACTIONS:-}" == true ]; then
   git commit --message "Archimate report ${GITHUB_ACTION:-0}:${GITHUB_JOB:-0}"
 
   _subtree="$(
-    git subtree split --prefix "$GIT_SUBTREE_PREFIX" "$GITHUB_REF_NAME"
+    git subtree split --prefix "$GIT_SUBTREE_PREFIX" "$GITHUB_REF_NAME" || :
   )"
+  [ -n "$_subtree" ] || fail "git subtree split returned empty sha"
+
   git push origin "$_subtree:$GITHUB_PAGES_BRANCH" --force
 
   exit 0
