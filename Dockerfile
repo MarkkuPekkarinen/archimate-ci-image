@@ -4,17 +4,26 @@ WORKDIR /archi
 
 ARG TZ=UTC
 
-# DL3015 ignored for suppress org.freedesktop.DBus.Error.ServiceUnknown
-# hadolint ignore=DL3008,DL3015
+# hadolint ignore=DL3008
 RUN set -eux; \
     ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime; \
     echo "$TZ" > /etc/timezone; \
     apt-get update; \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
       ca-certificates \
       language-pack-en-base \
-      libgtk2.0-cil \
+      at-spi2-core \
+      libgtk2.0-0 \
       libswt-gtk-4-jni \
+      libxext6 \
+      libxrender1 \
+      libxi6 \
+      libxtst6 \
+      libglib2.0-0 \
+      libcairo2 \
+      libpango-1.0-0 \
+      libpangocairo-1.0-0 \
+      dbus \
       dbus-x11 \
       xvfb \
       curl \
@@ -25,14 +34,14 @@ RUN set -eux; \
     update-ca-certificates; \
     rm -rf /var/lib/apt/lists/*
 
-ENV LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 FROM base AS archi
 ARG ARCHI_VERSION=5.7.0
 
 # Download & extract Archimate tool
 RUN set -eux; \
-    curl -#Lo archi.tgz \
+    curl -fsSL --retry 3 -o archi.tgz \
       "https://github.com/archimatetool/archi.io/releases/download/$ARCHI_VERSION/Archi-Linux64-$ARCHI_VERSION.tgz"; \
     tar zxf archi.tgz -C /opt/; \
     rm archi.tgz; \
@@ -44,7 +53,7 @@ ARG COARCHI_VERSION=0.9.4
 
 # Download & extract Archimate coArchi plugin
 RUN set -eux; \
-    curl -#Lo coarchi.zip \
+    curl -fsSL --retry 3 -o coarchi.zip \
       "https://www.archimatetool.com/downloads/coarchi/coArchi_$COARCHI_VERSION.archiplugin"; \
     unzip coarchi.zip -d /root/.archi/dropins/ && \
     rm coarchi.zip

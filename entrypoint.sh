@@ -72,7 +72,7 @@ archi_run() {
     )
 
   # Run Archi
-  xvfb-run -a \
+  dbus-run-session -- xvfb-run -a \
     /opt/Archi/Archi -application "$ARCHI_APP" -consoleLog -nosplash \
       --modelrepository.loadModel "$ARCHI_PROJECT_PATH" "${_args[@]}" &&
   printf '\n%s\n\n' "Done. Reports saved to $ARCHI_REPORT_PATH"
