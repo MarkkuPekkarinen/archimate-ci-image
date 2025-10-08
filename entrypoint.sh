@@ -150,8 +150,10 @@ smsg() {
     "$ACCESS_TOKEN" "$AUTH_TOKEN" "$TOKEN" "$PASSWORD"
   do
     if [ -n "${secret:-}" ]; then
-      esc_secret=$(printf '%s\n' "$secret" | sed -e 's/[\/&]/\\&/g')
-      msg=$(sed "s/${esc_secret}/***SECRET***/g" <<<"$msg")
+      local safe_secret="${secret//\//\\/}"
+      safe_secret="${safe_secret//%/%%}"
+      msg="${msg//${secret}/***SECRET***}"
+      msg="${msg//${safe_secret}/***SECRET***}"
     fi
   done
 
@@ -281,7 +283,7 @@ if [ -f "$ARCHI_PROJECT_PATH/model/folder.xml" ]; then
 # Work with remote git repository model
 elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
-  # Chek URL is SSH and clone
+  # Check URL is SSH and clone
   if re_match "${GIT_REPOSITORY:-}" "^$_re_proto_ssh$_re_url$"; then
     smsg "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir with ssh"
     git_clone "$GIT_REPOSITORY"
