@@ -140,17 +140,17 @@ section_end () {
 # Safe echo: hides secrets like tokens, passwords, etc.
 smsg() {
   local msg="$*"
+  local name secret esc
 
-  for secret in \
-    "$GITHUB_TOKEN" "$GIT_TOKEN" "$GIT_PASSWORD" "$CI_JOB_TOKEN" \
-    "$ACCESS_TOKEN" "$AUTH_TOKEN" "$TOKEN" "$PASSWORD"
+  for name in \
+    GITHUB_TOKEN GIT_TOKEN GIT_PASSWORD CI_JOB_TOKEN \
+    ACCESS_TOKEN AUTH_TOKEN TOKEN PASSWORD
   do
-    if [ -n "${secret:-}" ]; then
-      local safe_secret="${secret//\//\\/}"
-      safe_secret="${safe_secret//%/%%}"
-      msg="${msg//${secret}/***SECRET***}"
-      msg="${msg//${safe_secret}/***SECRET***}"
-    fi
+    secret="${!name:-}"
+    [ -n "$secret" ] || continue
+    # escape sed specials
+    esc=$(printf '%s' "$secret" | sed -e 's/[\/&]/\\&/g')
+    msg=$(printf '%s' "$msg" | sed "s/${esc}/***SECRET***/g")
   done
 
   printf '%s\n' "$msg"
