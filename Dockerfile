@@ -28,19 +28,19 @@ RUN set -eux; \
 ENV LANG=en_US.UTF-8
 
 FROM base AS archi
-ARG ARCHI_VERSION=5.0.2
+ARG ARCHI_VERSION=5.7.0
 
 # Download & extract Archimate tool
 RUN set -eux; \
     curl -#Lo archi.tgz \
-      "https://www.archimatetool.com/downloads/archi-5.php?/$ARCHI_VERSION/Archi-Linux64-$ARCHI_VERSION.tgz"; \
+      "https://github.com/archimatetool/archi.io/releases/download/$ARCHI_VERSION/Archi-Linux64-$ARCHI_VERSION.tgz"; \
     tar zxf archi.tgz -C /opt/; \
     rm archi.tgz; \
     chmod +x /opt/Archi/Archi; \
     mkdir -p /root/.archi/dropins /archi/report /archi/project
 
 FROM archi AS coarchi
-ARG COARCHI_VERSION=0.9.2
+ARG COARCHI_VERSION=0.9.4
 
 # Download & extract Archimate coArchi plugin
 RUN set -eux; \
