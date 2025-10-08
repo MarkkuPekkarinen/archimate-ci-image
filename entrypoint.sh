@@ -141,6 +141,23 @@ section_end () {
   printf '\e[0Ksection_end:%s:%s\r\e[0K\n' "$(date +%s)" "$*"
 }
 
+# Safe echo: hides secrets like tokens, passwords, etc.
+smsg() {
+  local msg="$*"
+
+  for secret in \
+    "$GITHUB_TOKEN" "$GIT_TOKEN" "$GIT_PASSWORD" "$CI_JOB_TOKEN" \
+    "$ACCESS_TOKEN" "$AUTH_TOKEN" "$TOKEN" "$PASSWORD"
+  do
+    if [ -n "${secret:-}" ]; then
+      esc_secret=$(printf '%s\n' "$secret" | sed -e 's/[\/&]/\\&/g')
+      msg=$(sed "s/${esc_secret}/***SECRET***/g" <<<"$msg")
+    fi
+  done
+
+  printf '%s\n' "$msg"
+}
+
 # Fail message to stder and exit 1
 fail() { printf >&2 '%s\n' "$*"; exit 1; }
 
@@ -150,7 +167,7 @@ fail() { printf >&2 '%s\n' "$*"; exit 1; }
 
 # Run custom archi command
 if [ "$#" -ge 1 ]; then
-  echo "Execute Archi with _args: $*"
+  smsg "Execute Archi with _args: $*"
   xvfb-run \
     /opt/Archi/Archi -application "$ARCHI_APP" -consoleLog -nosplash "$@"
   exit 0
@@ -177,7 +194,10 @@ if [ "${GITHUB_ACTIONS:-}" == true ]; then
 
   # Prepare vars
   : "${GITHUB_REPOSITORY:?Repository name not set}"
+
+  [ "${DEBUG:-false}" != true ] && set +x;
   GITHUB_TOKEN="$(urlencode "${GITHUB_TOKEN:?Token not specified}")"
+  [ "${DEBUG:-false}" != true ] && set -x
 
   # Create repository url with token
   _gh_repo="${GITHUB_SERVER_URL//:\/\/*}://"                       # Protocol
@@ -250,11 +270,11 @@ fi
 
 # Check and use exist or mounted model
 if [ -f "$ARCHI_PROJECT_PATH/model/folder.xml" ]; then
-  echo "Work with exist model in $ARCHI_PROJECT_PATH directory"
+  smsg "Work with exist model in $ARCHI_PROJECT_PATH directory"
   # Try update exist model
   {
     git -C "$ARCHI_PROJECT_PATH" pull &>/dev/null &&
-    echo "Use actual state of model $_project."
+    smsg "Use actual state of model $_project."
   } || :
 
 
@@ -263,7 +283,7 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
   # Chek URL is SSH and clone
   if re_match "${GIT_REPOSITORY:-}" "^$_re_proto_ssh$_re_url$"; then
-    echo "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir with ssh"
+    smsg "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir with ssh"
     git_clone "$GIT_REPOSITORY"
 
   # Check URL is HTTP
@@ -281,7 +301,7 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
         _auth="oauth2:$GIT_TOKEN"
       fi
 
-      echo \
+      smsg \
         "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir use token"
       git_clone "$_proto://$_auth@${GIT_REPOSITORY#*://}"
 
@@ -290,13 +310,13 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
       # Encode symbols
       _auth="$(urlencode "$GIT_USERNAME"):$(urlencode "$GIT_PASSWORD")"
 
-      echo \
+      smsg \
         "Clone model from $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir use token"
       git_clone "$_proto://$_auth@${GIT_REPOSITORY#*://}"
 
     # Use public repository access
     else
-      echo \
+      smsg \
         "Clone model from repository $GIT_REPOSITORY to $ARCHI_PROJECT_PATH dir"
       git_clone "$GIT_REPOSITORY"
 
@@ -309,7 +329,7 @@ elif [ -n "${GIT_REPOSITORY:-}" ]; then
 
 # Exit. Model not exist
 else
-  fail \
+  smsg \
     "Plese set http or ssh url to git repositorty in \$GIT_REPOSITORY" \
     "variable or mount model to \$ARCHI_PROJECT_PATH ($ARCHI_PROJECT_PATH)" \
     'directory.'
