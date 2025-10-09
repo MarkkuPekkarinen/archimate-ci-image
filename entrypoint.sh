@@ -106,8 +106,11 @@ urlencode() {
 insert_nav_right() {
   local file="$1" line="$2"
   awk -v ins="$line" '
-    BEGIN { done=0 }
-    /<ul[^>]*class="[^"]*\bnavbar-right\b[^"]*"/ && done==0 {
+    BEGIN { done=0; re_ul="class=[\"\x27][^\"\x27]*(navbar-right|navbar-end|ms-auto)[^\"\x27]*[\"\x27]" }
+    $0 ~ /<ul[^>]*class=[\"\x27][^\"\x27]*nav[^\"\x27]*navbar-nav[^\"\x27]*[\"\x27]/ && done==0 && !match($0, re_ul) {
+      print; print ins; done=1; next
+    }
+    $0 ~ /<ul[^>]*class=[\"\x27][^\"\x27]*(navbar-right|navbar-end|ms-auto)[^\"\x27]*[\"\x27]/ && done==0 {
       print; print ins; done=1; next
     }
     { print }
@@ -115,7 +118,8 @@ insert_nav_right() {
 }
 
 update_html() {
-  local html="$ARCHI_REPORT_PATH/index.html"
+  local html_root="${ARCHI_HTML_REPORT_PATH:-$ARCHI_REPORT_PATH/html}"
+  local html="$html_root/index.html"
 
   [ ! -f "$html" ] && return
 
@@ -367,5 +371,5 @@ fi
 
 # Make report
 archi_run
-
+[ "${ARCHI_HTML_REPORT_ENABLED,,}" == true ] && update_html
 exit 0
