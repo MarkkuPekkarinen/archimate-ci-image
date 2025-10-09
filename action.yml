@@ -15,6 +15,7 @@ runs:
     ARCHI_JASPER_REPORT_TITLE: ${{ inputs.archiJasperReportTitle }}
     ARCHI_CSV_REPORT_ENABLED: ${{ inputs.archiCsvReportEnabled }}
     ARCHI_EXPORT_MODEL_ENABLED: ${{ inputs.archiExportModelEnabled }}
+    ARCHI_EXTRA_ARGS: ${{ inputs.archiExtraArgs }}
     GITHUB_SERVER_URL: ${{ inputs.githubServerURL }}
     GITHUB_PAGES_DOMAIN: ${{ inputs.githubPagesDomain }}
     GITHUB_PAGES_BRANCH: ${{ inputs.githubPagesBranch }}
@@ -44,6 +45,9 @@ inputs:
     required: false
   archiExportModelEnabled:
     description: Export model in *.archimate file
+    required: false
+  archiExtraArgs:
+    description: Extra CLI args appended to Archi command
     required: false
   githubServerURL:
     description: GitHub server URL

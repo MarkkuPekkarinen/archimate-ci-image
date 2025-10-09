@@ -15,6 +15,7 @@ set -euo pipefail
 : "${ARCHI_CSV_REPORT_ENABLED:=false}"
 : "${ARCHI_EXPORT_MODEL_ENABLED:=true}"
 : "${ARCHI_APP:=com.archimatetool.commandline.app}"
+: "${ARCHI_EXTRA_ARGS:=}"
 
 : "${GITHUB_SERVER_URL:=https://github.com}"
 : "${GITHUB_PAGES_BRANCH:=gh-pages}"
@@ -71,6 +72,11 @@ archi_run() {
         "${ARCHI_JASPER_REPORT_TITLE:=$_project}"
     )
 
+  if [ -n "$ARCHI_EXTRA_ARGS" ]; then
+    # shellcheck disable=SC2206  # we want word-splitting into array
+    _args+=( $ARCHI_EXTRA_ARGS )
+  fi
+
   # Run Archi
   dbus-run-session -- xvfb-run -a \
     /opt/Archi/Archi -application "$ARCHI_APP" -consoleLog -nosplash \
@@ -101,7 +107,6 @@ insert_nav_right() {
   local file="$1" line="$2"
   awk -v ins="$line" '
     BEGIN { done=0 }
-    # match UL where class attribute contains word navbar-right (class order agnostic)
     /<ul[^>]*class="[^"]*\bnavbar-right\b[^"]*"/ && done==0 {
       print; print ins; done=1; next
     }
@@ -352,6 +357,13 @@ else
     'directory.'
 fi
 
+
+if [ "$#" -ge 1 ]; then
+  smsg "Execute Archi with _args: $*"
+  dbus-run-session -- xvfb-run -a \
+    /opt/Archi/Archi -application "$ARCHI_APP" -consoleLog -nosplash "$@"
+  exit 0
+fi
 
 # Make report
 archi_run
