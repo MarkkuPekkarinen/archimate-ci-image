@@ -7,6 +7,16 @@ itself. For example `4.9.1-1.0.1`
 
 ## [Unreleased]
 
+## [5.7.0-1.0.6] - 2025-10-09
+
+### Added
+
+* Support `ARCHI_EXTRA_ARGS` to append custom Archi CLI args
+
+### Changed
+
+* Restore Nav-bar links to reports (again)
+
 ## [5.7.0-1.0.5] - 2025-10-09
 
 ### Added
